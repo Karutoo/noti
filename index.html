@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT-like WebSocket Chat</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+        }
+
+        #chat-container {
+            width: 400px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        #messages {
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+            padding: 10px;
+            background-color: white;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .message-container {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+        }
+
+        .sent-message, .received-message {
+            padding: 10px;
+            border-radius: 10px;
+            word-wrap: break-word;
+            max-width: 70%;
+            margin-bottom: 5px;
+        }
+
+        .sent-message {
+            background-color: #4CAF50;
+            color: white;
+            align-self: flex-end;
+        }
+
+        .received-message {
+            background-color: #f0f0f0;
+            color: black;
+        }
+
+        .message-link {
+            color: #3498db;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        #input-container {
+            display: flex;
+            padding: 10px;
+            background-color: white;
+        }
+
+        #message-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 10px 0 0 10px;
+            margin-right: 5px;
+        }
+
+        #send-button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: 1px solid #4CAF50;
+            border-radius: 0 10px 10px 0;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="messages"></div>
+        <div id="input-container">
+            <input type="text" id="message-input" placeholder="Type your message...">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+
+    <audio id="notification-sound" src="notification2.mp3"></audio>
+
+    <script>
+        const socket = new WebSocket("ws://localhost:8765");
+        const messagesDiv = document.getElementById("messages");
+        const messageInput = document.getElementById("message-input");
+        const sendButton = document.getElementById("send-button");
+        const notificationSound = document.getElementById("notification-sound");
+
+        socket.addEventListener("message", function (event) {
+            displayMessage(event.data, "received");
+            playNotificationSound();
+        });
+
+        sendButton.addEventListener("click", function () {
+            const userMessage = messageInput.value;
+            if (userMessage.trim() !== "") {
+                displayMessage(userMessage, "sent");
+                socket.send(userMessage);
+                messageInput.value = "";
+            }
+        });
+
+        function displayMessage(message, type) {
+            const messageContainer = document.createElement("div");
+            messageContainer.className = "message-container";
+
+            const messageDiv = document.createElement("div");
+            messageDiv.className = type === "sent" ? "sent-message" : "received-message";
+
+            // メッセージ内のURLをクリック可能にする
+            messageDiv.innerHTML = parseMessage(message);
+
+            messageContainer.appendChild(messageDiv);
+            messagesDiv.appendChild(messageContainer);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function parseMessage(message) {
+            // 正規表現を使用してメッセージ内のURLをリンクに変換
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            return message.replace(urlRegex, '<span class="message-link" onclick="openLink(\'$1\')">$1</span>');
+        }
+
+        // URLをクリックした際に新しいウィンドウで開く
+        function openLink(url) {
+            window.open(url, '_blank');
+        }
+
+        function playNotificationSound() {
+            notificationSound.play();
+        }
+    </script>
+</body>
+</html>
