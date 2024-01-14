@@ -135,10 +135,18 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
+        // function parseMessage(message) {
+        //     const urlRegex = /(https?:\/\/[^\s]+)/g;
+        //     const lines = message.split('\n');
+        //     const parsedLines = lines.map(line => line.replace(urlRegex, '<span class="message-link" onclick="openLink(\'$1\')">$1</span>'));
+        //     return parsedLines.join('<br>');
+        // }
+
         function parseMessage(message) {
-            // 正規表現を使用してメッセージ内のURLをリンクに変換
             const urlRegex = /(https?:\/\/[^\s]+)/g;
-            return message.replace(urlRegex, '<span class="message-link" onclick="openLink(\'$1\')">$1</span>');
+            const lines = message.split('\n');
+            const parsedLines = lines.map(line => line.replace(urlRegex, '<span class="message-link" onclick="openLink(\'$1\')">$1</span>')).join('<br>');
+            return parsedLines;
         }
 
         // URLをクリックした際に新しいウィンドウで開く
